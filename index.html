@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+        integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+        crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+        integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+        crossorigin=""></script>
+    <link rel="stylesheet"
+        href="https://raw.githubusercontent.com/msmith0913/Leaflet.Control.Layers.Tree/refs/heads/master/L.Control.Layers.Tree.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&family=Montserrat:ital,wght@0,100..900;1,100..900&family=PT+Serif:ital,wght@0,400;0,700;1,400;1,700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap"
+        rel="stylesheet">
+    <style>
+        #map {
+            position: relative;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            width: 80%;
+            height: 600px;
+        }
+
+        h1 {
+            font-family: "Playfair Display", serif;
+            font-size: 44px;
+            line-height: 1.1;
+            font-weight: 700;
+            color: #000;
+            text-align: center;
+        }
+
+        h2 {
+            font-family: "Montserrat", sans-serif;
+            font-size: 32px;
+            line-height: 1.3;
+            font-weight: 700;
+            color: #000;
+            text-align: center;
+        }
+
+        h3 {
+            font-family: "Lora", serif;
+            font-size: 24px;
+            line-height: 1.3;
+            font-weight: 700;
+            color: #000;
+        }
+
+        h4 {
+            font-family: "PT Serif", serif;
+            font-size: 18px;
+            line-height: 1.2;
+            font-weight: 700;
+            color: #000;
+        }
+
+        h5 {
+            font-family: "Montserrat", sans-serif;
+            font-size: 14px;
+            line-height: 1.2;
+            font-weight: normal;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: #000;
+        }
+
+        h6 {
+            font-family: "Montserrat", sans-serif;
+            font-size: 12px;
+            line-height: 1.2;
+            font-weight: normal;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: #000;
+        }
+
+        body {
+            padding: 20px;
+            font-family: "Lora", serif;
+            font-size: 17px;
+            line-height: 1.6;
+            color: #383C50;
+        }
+
+        leaflet-popup-content {
+            max-width: 100%;
+        }
+    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="https://msmith0913.github.io/stl-sandbox/" target="_blank">
+    <title>St. Louis Sandbox</title>
+</head>
+
+<body>
+    <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-omnivore/v0.2.0/leaflet-omnivore.min.js'></script>
+    <script
+        src='https://raw.githubusercontent.com/msmith0913/Leaflet.Control.Layers.Tree/refs/heads/master/L.Control.Layers.Tree.js'></script>
+    <h1>St. Louis Sandbox</h1>
+    <p>This map of St. Louis is my method for tracking how much of the city I've explored and how. It's partly for fun,
+        but it's also a tool for critically analyzing my own relationship to the city. Having lived in south city for
+        over a decade, that section of the city is pretty well-represented. Other areas, though -- north city, downtown,
+        the riverfront -- don't appear much on this map.</p>
+    <p>It's not a perfect visualization. In many of these regions, I've done a lot of cycling, for instance. But this
+        visualization is a good starting point for those times when I want to go out and try something new.</p>
+    <p>- Meg Smith</p>
+    <p><b>Navigating the Map:</b> Click on any park or bus route to view its name and status (that is, whether I've
+        visited or ridden it). You can toggle the layers on and off using the layer control in the top right corner.</p>
+    <p><b>Want to make your own?</b> Fork this repository on GitHub and adjust the status accordingly. At some point in
+        the future, I plan to tweak the code so that you can update your route and park status via a spreadsheet. If you
+        do that before me, I'd love to pull your changes in!</p>
+
+    <div style="margin: auto" id="map"></div>
+    <script src="parks.js"></script>
+    <script src="rideeveryroute.js"></script>
+    <script>
+        var map = L.map('map', {
+            center: [38.61789736579951, -90.23839551600389],
+            zoom: 11
+        });
+
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        }).addTo(map);
+
+        // Change your styles here
+        function visitedStyle(feature) {
+            return {
+                fillColor: "#45b39d",
+                fillOpacity: .75,
+                color: '#45b39d',
+            };
+        }
+
+        function unvisitedStyle(feature) {
+            return {
+                fillColor: "#ec7063",
+                fillOpacity: .75,
+                color: '#ec7063',
+            };
+        }
+
+        function unriddenRoutesStyle(feature) {
+            return {
+                fillColor: "#ec7063",
+                fillOpacity: .75,
+                color: '#ec7063',
+            };
+        }
+
+        function partRiddenRoutesStyle(feature) {
+            return {
+                fillColor: "#f5b041",
+                fillOpacity: .75,
+                color: '#f5b041',
+            };
+        }
+
+        function riddenRoutesStyle(feature) {
+            return {
+                fillColor: "#45b39d",
+                fillOpacity: .75,
+                color: '#45b39d',
+            };
+        }
+
+        // Change your popup content here
+        function onEachParkFeature(feature, layer) {
+            if (feature.properties && feature.properties.TEXT_) {
+                layer.bindPopup("<b>Park:</b> " + feature.properties.TEXT_ + "<br><b>Visited:</b> " + feature.Visited);
+            }
+        }
+
+        function onEachRouteFeature(feature, layer) {
+            if (feature.properties && feature.properties.LineName) {
+                layer.bindPopup("<b>Line:</b> " + feature.properties.LineName + "<br><b>Status:</b> " + feature.properties.Status);
+            }
+        }
+
+        // Your data is here, but you shouldn't need to change this unless you're adding different filters
+        var visitedParks = L.geoJSON(parks, {
+            style: visitedStyle,
+            filter: function (feature, layer) {
+                return feature.Visited == "Yes";
+            },
+            onEachFeature: onEachParkFeature
+        });
+
+        var unvisitedParks = L.geoJSON(parks, {
+            style: unvisitedStyle,
+            filter: function (feature, layer) {
+                return feature.Visited == "No";
+            },
+            onEachFeature: onEachParkFeature
+        });
+
+        var allParks = L.layerGroup([visitedParks, unvisitedParks]).addTo(map);
+
+        var unriddenRoutes = L.geoJSON(routes, {
+            style: unriddenRoutesStyle,
+            filter: function (feature, layer) {
+                return feature.properties.Status == "Not ridden";
+            },
+            onEachFeature: onEachRouteFeature
+        });
+
+        var partRiddenRoutes = L.geoJSON(routes, {
+            style: partRiddenRoutesStyle,
+            filter: function (feature, layer) {
+                return feature.properties.Status == "Partially ridden";
+            },
+            onEachFeature: onEachRouteFeature
+        });
+
+        var riddenRoutes = L.geoJSON(routes, {
+            style: riddenRoutesStyle,
+            filter: function (feature, layer) {
+                return feature.properties.Status == "Fully ridden";
+            },
+            onEachFeature: onEachRouteFeature
+        });
+
+        var allRoutes = L.layerGroup([unriddenRoutes, partRiddenRoutes, riddenRoutes]).addTo(map);
+
+
+        var entityTree = {
+            label: '<strong>Datasets</strong>',
+            selectAllCheckbox: 'False',
+            children: [
+                { label: 'Parks', layer: allParks },
+                { label: 'Bus Routes', layer: allRoutes }
+            ]
+        };
+
+        L.control.layers.tree(null, entityTree).addTo(map);
+
+    </script>
+
+</body>
